@@ -1,0 +1,93 @@
+import sys
+
+from models import (
+    Broker,
+    BrokerUniqueBrokerage,
+    Category,
+    ClientAccount,
+    Custodian,
+    DealFile,
+    Family,
+    ScripIsin,
+    ScripIsinBrokerUniqueBrokerage,
+    Strategy,
+    TradeFile,
+)
+from psycopg2._psycopg import connection
+from schemas import (
+    Broker,
+    BrokerCreate,
+    BrokerInDB,
+    BrokerUniqueBrokerage,
+    BrokerUniqueBrokerageCreate,
+    BrokerUniqueBrokerageInDB,
+    BrokerUniqueBrokerageUpdate,
+    BrokerUpdate,
+    Category,
+    CategoryCreate,
+    CategoryInDB,
+    CategoryUpdate,
+    ClientAccount,
+    ClientAccountCreate,
+    ClientAccountInDB,
+    ClientAccountUpdate,
+    Custodian,
+    CustodianCreate,
+    CustodianInDB,
+    CustodianUpdate,
+    DealFile,
+    DealFileCreate,
+    DealFileInDB,
+    DealFileUpdate,
+    Family,
+    FamilyCreate,
+    FamilyInDB,
+    FamilyUpdate,
+    ScripIsin,
+    ScripIsinBrokerUniqueBrokerage,
+    ScripIsinBrokerUniqueBrokerageCreate,
+    ScripIsinBrokerUniqueBrokerageInDB,
+    ScripIsinBrokerUniqueBrokerageUpdate,
+    ScripIsinCreate,
+    ScripIsinInDB,
+    ScripIsinUpdate,
+    Strategy,
+    StrategyCreate,
+    StrategyInDB,
+    StrategyUpdate,
+    TradeFile,
+    TradeFileCreate,
+    TradeFileInDB,
+    TradeFileUpdate,
+)
+
+from app.api.deps import db_session
+from app.db.init_db import init_db
+from app.prestart import (
+    db_connection,
+    db_creation,
+    run_migrations,
+    user_creation,
+)
+
+try:
+    con: connection = db_connection()
+    db, db_exists = db_creation(con)
+    miles_con: connection = db_connection(dbname=True)
+    user_creation(con=miles_con, db_name=db)
+    print("Running migrations...")
+    run_migrations()
+    print("Application pre-startup setup complete.")
+
+    init_db(db=db_session)
+except Exception as e:
+    con.rollback()
+    miles_con.rollback()
+    db_session.rollback()
+    exception_template: str = f"Traceback {type(e).__name__}: {e}, File {__file__}, Error on line {sys.exc_info()[-1].tb_lineno}\n"
+    print(exception_template)
+    raise
+finally:
+    con.close()
+    miles_con.close()
+    db_session.close()
