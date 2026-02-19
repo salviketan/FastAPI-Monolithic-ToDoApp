@@ -1,67 +1,16 @@
 import sys
 
-from models import (
-    Broker,
-    BrokerUniqueBrokerage,
-    Category,
-    ClientAccount,
-    Custodian,
-    DealFile,
-    Family,
-    ScripIsin,
-    ScripIsinBrokerUniqueBrokerage,
-    Strategy,
-    TradeFile,
-)
+from models import Task
 from psycopg2._psycopg import connection
 from schemas import (
-    Broker,
-    BrokerCreate,
-    BrokerInDB,
-    BrokerUniqueBrokerage,
-    BrokerUniqueBrokerageCreate,
-    BrokerUniqueBrokerageInDB,
-    BrokerUniqueBrokerageUpdate,
-    BrokerUpdate,
-    Category,
-    CategoryCreate,
-    CategoryInDB,
-    CategoryUpdate,
-    ClientAccount,
-    ClientAccountCreate,
-    ClientAccountInDB,
-    ClientAccountUpdate,
-    Custodian,
-    CustodianCreate,
-    CustodianInDB,
-    CustodianUpdate,
-    DealFile,
-    DealFileCreate,
-    DealFileInDB,
-    DealFileUpdate,
-    Family,
-    FamilyCreate,
-    FamilyInDB,
-    FamilyUpdate,
-    ScripIsin,
-    ScripIsinBrokerUniqueBrokerage,
-    ScripIsinBrokerUniqueBrokerageCreate,
-    ScripIsinBrokerUniqueBrokerageInDB,
-    ScripIsinBrokerUniqueBrokerageUpdate,
-    ScripIsinCreate,
-    ScripIsinInDB,
-    ScripIsinUpdate,
-    Strategy,
-    StrategyCreate,
-    StrategyInDB,
-    StrategyUpdate,
-    TradeFile,
-    TradeFileCreate,
-    TradeFileInDB,
-    TradeFileUpdate,
+    Task,
+    TaskCreate,
+    TaskInDB,
+    TaskUpdate,
 )
 
 from app.api.deps import db_session
+from app.crud import task
 from app.db.init_db import init_db
 from app.prestart import (
     db_connection,
