@@ -14,7 +14,7 @@ from app.db.base_class import Base
 
 class Task(Base):
     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
-    name: Mapped[str] = mapped_column(String(), index=True, nullable=False)
+    name: Mapped[str] = mapped_column(String(250), index=True, nullable=False)
     completed: Mapped[bool] = mapped_column(Boolean, default=False)
     active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
