@@ -1,6 +1,5 @@
-from typing import Any, Generic, Tuple, TypeVar
+from typing import Any, Generic, TypeVar
 
-import jsonschema
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
