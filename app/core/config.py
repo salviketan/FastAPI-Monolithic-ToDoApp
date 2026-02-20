@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     )
 
     API_V1_STR: str = "/api/v1"
-    PROJECT_NAME: str = "Miles App"
+    PROJECT_NAME: str = "To Do App"
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
     TAGS_METADATA: list[dict[str, str]] = []
     DB_ENGINE: str = os.getenv("DB_ENGINE", "postgresql")
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
                 host=info.data.get("DB_HOST"),
                 port=int(info.data.get("DB_PORT", 5432)),
                 path=info.data.get("DB_NAME") or "",
-            )  # noqa: COM812
+            ),
         )
 
 
