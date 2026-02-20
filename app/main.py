@@ -7,9 +7,9 @@ from app.core.config import settings
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
-    openapi_url=f"{settings.API_V1_STR}/miles/openapi.json",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json",
     openapi_tags=settings.TAGS_METADATA,
-    docs_url=f"{settings.API_V1_STR}/miles/docs",
+    docs_url=f"{settings.API_V1_STR}/docs",
 )
 
 # Set all CORS enabled origins
@@ -23,7 +23,7 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 
-@app.get(f"{settings.API_V1_STR}/miles/", tags=["Homepage"], include_in_schema=False)
+@app.get("", include_in_schema=False)
 async def homepage(request: Request) -> HTMLResponse:
     print(request.base_url)
     html_content = """
