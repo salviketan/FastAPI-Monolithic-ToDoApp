@@ -1,8 +1,11 @@
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, Tuple, TypeVar
 
+import jsonschema
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
+from sqlalchemy import select
 from sqlalchemy.orm import Session
+from sqlalchemy.sql.selectable import Select
 
 from app.db.base_class import Base
 
@@ -22,11 +25,31 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model: type[ModelType] = model
 
-    def get(self, db: Session, idx: Any) -> ModelType | None:
-        return db.query(self.model).filter(self.model.id == idx).first()
+    def get(
+        self,
+        db: Session,
+        idx: Any,
+        options: list | None = None,
+    ) -> ModelType | None:
+        query: Select[tuple[ModelType]] = select(self.model).where(self.model.id == idx)
 
-    def get_by_kwargs(self, db: Session, kwargs) -> ModelType | None:
-        return db.query(self.model).filter_by(**kwargs).first()
+        if options:
+            query = query.options(*options)
+
+        return db.execute(query).scalar_one_or_none()
+
+    def get_by_kwargs(
+        self,
+        db: Session,
+        kwargs,
+        options: list | None = None,
+    ) -> list[ModelType]:
+        query: Select[tuple[ModelType]] = select(self.model).where(**kwargs)
+
+        if options:
+            query = query.options(*options)
+
+        return db.execute(query).scalars().all()
 
     def get_multi(
         self,
@@ -34,10 +57,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         skip: int = 0,
         limit: int = 100,
+        options: list | None = None,
     ) -> list[ModelType]:
-        return (
-            db.query(self.model).order_by(self.model.id).offset(skip).limit(limit).all()
+        query: Select[tuple[ModelType]] = (
+            select(self.model).offset(skip).limit(limit).order_by(self.model.id)
         )
+
+        if options:
+            query = query.options(*options)
+
+        return db.execute(query).scalars().all()
 
     def create_from_dict(
         self,
@@ -52,7 +81,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         return db_obj
 
     def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
-        obj_in_data: Any = jsonable_encoder(obj_in)
+        obj_in_data: dict[str, Any] = jsonable_encoder(obj_in)
         db_obj: ModelType = self.create_from_dict(db, obj_in_data=obj_in_data)
         return db_obj
 
@@ -62,8 +91,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         *,
         db_obj: ModelType,
         obj_in: UpdateSchemaType | dict[str, Any],
+        refresh_attributes: list[str] | None,
     ) -> ModelType:
-        obj_data: Any = jsonable_encoder(db_obj)
+        obj_data: dict[str, Any] = jsonable_encoder(db_obj)
         if isinstance(obj_in, dict):
             update_data: dict[str, Any] = obj_in
         else:
@@ -73,11 +103,17 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
                 setattr(db_obj, field, update_data[field])
         db.add(db_obj)
         db.commit()
-        db.refresh(db_obj)
+
+        if refresh_attributes:
+            db.refresh(db_obj, attribute_names=refresh_attributes)
+        else:
+            db.refresh(db_obj)
         return db_obj
 
     def remove(self, db: Session, *, idx: int) -> ModelType:
-        obj: ModelType | None = db.query(self.model).get(idx)
-        db.delete(obj)
-        db.commit()
+        query: Select[tuple[ModelType]] = select(self.model).where(self.model.id == idx)
+        obj: ModelType | None = db.execute(query).scalar_one_or_none()
+        if obj:
+            db.delete(obj)
+            db.commit()
         return obj
