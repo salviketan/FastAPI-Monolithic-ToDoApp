@@ -20,4 +20,4 @@ def get_db() -> Generator:
         db.close()
 
 
-db_session: Any = next(get_db())
+db_session: Session = next(get_db())
