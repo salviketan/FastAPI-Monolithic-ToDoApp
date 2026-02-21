@@ -2,7 +2,6 @@ import sys
 
 from api.deps import db_session
 from db.init_db import init_db
-from models import Task
 from prestart import (
     db_connection,
     db_creation,
