@@ -3,8 +3,8 @@ import uvicorn
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",
-        host="0.0.0.0",  # noqa: S104
-        port=80,
+        host="localhost",  # noqa: S104
+        port=8000,
         reload=True,
-        reload_excludes="versions/*.*",
+        reload_excludes=[".venv", "versions/*.*"],
     )
