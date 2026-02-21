@@ -5,10 +5,9 @@ import psycopg2
 from alembic import command, script, util
 from alembic.config import Config
 from alembic.runtime import migration
+from core.config import BASE_DIR, settings
+from db.session import engine
 from psycopg2 import sql
-
-from app.core.config import BASE_DIR, settings
-from app.db.session import engine
 
 
 def db_connection(*, dbname: bool = False) -> psycopg2.connection:
