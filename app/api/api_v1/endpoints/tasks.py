@@ -40,7 +40,7 @@ def create_task(
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
     task_in_data: dict[str, Any] = jsonable_encoder(task_in)
-    task: models.Task = crud.task.get_by_kwargs(db, task_in_data)
+    task: list[models.Task] | None = crud.task.get_by_kwargs(db, task_in_data)
     if task:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

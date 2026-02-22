@@ -41,7 +41,7 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db: Session,
         kwargs,
         options: list | None = None,
-    ) -> list[ModelType]:
+    ) -> list[ModelType] | None:
         query: Select[tuple[ModelType]] = select(self.model).where(**kwargs)
 
         if options:
