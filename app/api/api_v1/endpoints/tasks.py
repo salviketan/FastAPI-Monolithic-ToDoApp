@@ -1,16 +1,20 @@
-from typing import Annotated
+from typing import Annotated, Any
 
 import crud
 import models
 import schemas
 from api import deps
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 router = APIRouter()
 
 
-@router.get("", response_model=list[schemas.Task])
+@router.get(
+    "",
+    response_model=list[schemas.Task],
+)
 def get_tasks(
     db: Annotated[Session, Depends(deps.get_db)],
     skip: int = 0,
@@ -23,3 +27,24 @@ def get_tasks(
     )
 
     return tasks
+
+
+@router.post(
+    "",
+    response_model=schemas.Task,
+    status_code=status.HTTP_201_CREATED,
+)
+def create_task(
+    *,
+    task_in: schemas.TaskCreate,
+    db: Annotated[Session, Depends(deps.get_db)],
+) -> Any:
+    task_in_data: dict[str, Any] = jsonable_encoder(task_in)
+    task: models.Task = crud.task.get_by_kwargs(db, task_in_data)
+    if task:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Task already exists.",
+        )
+    task = crud.task.create(db, obj_in=task_in)
+    return task
