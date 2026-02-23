@@ -12,7 +12,6 @@ wheels/
 **/.env
 **/__pycache__/
 **/alembic/versions/
-db_creds/
 
 # exception to the rule
 app/files/!.keepit
