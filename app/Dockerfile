@@ -17,25 +17,22 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /backend
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
-ARG UID=10001
-RUN adduser \
---disabled-password \
---gecos "" \
---home "/nonexistent" \
---shell "/sbin/nologin" \
---no-create-home \
---uid "${UID}" \
-appuser
+# # Create a non-privileged user that the app will run under.
+# # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+# ARG UID=10001
+# RUN adduser \
+# --disabled-password \
+# --gecos "" \
+# --home "/nonexistent" \
+# --shell "/sbin/nologin" \
+# --no-create-home \
+# --uid "${UID}" \
+# appuser
 
-RUN apt-get update \
-&& apt-get -y install libpq-dev gcc && apt-get -y install vim curl
+RUN apk add --no-cache postgresql-dev gcc musl-dev vim
 
-RUN curl -LsSf https://astral.sh/uv/install.sh | sh
-
-RUN exit
-RUN apt-get update
+# Skip curl/sh and just copy the binary directly
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
     
 # Download dependencies as a separate step to take advantage of Docker's caching.
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
@@ -52,11 +49,11 @@ COPY . .
 # Final sync to install the app itself
 RUN uv sync --frozen --no-dev
 
-# Make non-privileged user owner of app directory
-RUN chown -R appuser:appuser ../backend
+# # Make non-privileged user owner of app directory
+# RUN chown -R appuser:appuser ../backend
 
-# Switch to the non-privileged user to run the application.
-USER appuser
+# # Switch to the non-privileged user to run the application.
+# USER appuser
 
 # Set the virtualenv at the front of the PATH
 ENV PATH="/backend/.venv/bin:$PATH"
