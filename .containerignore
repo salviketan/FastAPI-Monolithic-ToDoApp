@@ -1,0 +1,85 @@
+# Include any files or directories that you don't want to be copied to your
+# container here (e.g., local build artifacts, temporary files, etc.).
+#
+# For more help, visit the .dockerignore file reference guide at
+# https://docs.docker.com/engine/reference/builder/#dockerignore-file
+
+# ==========================================
+# 1. Virtual Environments & Dependencies
+# ==========================================
+**/.venv/
+**/[Vv]env/
+**/ENV/
+**/env/
+**/node_modules/
+**/bin/
+**/obj/
+
+# ==========================================
+# 2. Python & Build Artifacts
+# ==========================================
+**/__pycache__/
+**/*.py[cod]
+**/*$py.class
+**/.pytest_cache/
+**/.tox/
+**/.nox/
+**/.coverage
+**/htmlcov/
+build/
+dist/
+*.egg-info/
+
+# ==========================================
+# 3. UV & Package Manager Specific
+# ==========================================
+**/.uv/
+**/npm-debug.log
+
+# ==========================================
+# 4. Version Control & IDEs
+# ==========================================
+.git/
+**/.gitignore
+**/.vscode/
+**/.vs/
+**/.settings/
+**/.project/
+**/.classpath/
+**/.toolstarget/
+**/*.*proj.user
+**/*.dbmdl
+**/*.jfm
+
+# ==========================================
+# 5. Docker & Configuration
+# ==========================================
+.dockerignore
+**/Dockerfile*
+docker-compose*
+compose*
+**/secrets.dev.yaml
+**/values.dev.yaml
+**.env_ref
+**/db_creds
+
+# ==========================================
+# 6. Database & Migrations
+# ==========================================
+# Keeps the folder but ignores specific version files if you want 
+# fresh migrations inside the container
+**/alembic/versions/*.*
+
+# ==========================================
+# 7. Infrastructure & Static Files
+# ==========================================
+nginx/
+**/charts/
+
+# ==========================================
+# 8. Miscellaneous
+# ==========================================
+**/.DS_Store
+Thumbs.db
+LICENSE
+README.md
