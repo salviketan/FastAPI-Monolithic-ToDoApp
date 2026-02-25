@@ -32,24 +32,44 @@ def db_connection(*, dbname: bool = False) -> psycopg2.connection:
 def user_creation(con, db_name: str) -> None:
     cur: Any = con.cursor()
     query = "SELECT COUNT(*) FROM pg_catalog.pg_roles WHERE rolname = %s"
+    print("--" * 10, cur.execute(query, (settings.DB_USER,)))
     cur.execute(query, (settings.DB_USER,))
-    user_exists: Any = cur.fetchone()
+    user_exists: Any = cur.fetchone()[0]
+    print("--" * 10, user_exists)
     if user_exists == 0:
-        query: sql.Composed = sql.SQL("CREATE ROLE {0} LOGIN PASSWORD {1}").format(
+        query: sql.Composed = sql.SQL("CREATE ROLE {0} LOGIN PASSWORD {1};").format(
             sql.Identifier(settings.DB_USER),
             sql.Literal(settings.DB_PASSWORD),
         )
         cur.execute(query.as_string(con))
         print("User Created.")
         print("Granting privileges on database to user.")
-        grant_db = "GRANT ALL PRIVILEGES ON DATABASE %s to %s;"
-        cur.execute(grant_db, (db_name, settings.DB_USER))
-        grant_schema = "GRANT ALL ON SCHEMA public TO %s;"
-        cur.execute(grant_schema, (settings.DB_USER,))
-        grant_tables = "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;"
-        cur.execute(grant_tables, (settings.DB_USER,))
-        alter_schema_privilege = "ALTER DEFAULT PRIVILEGES FOR USER %s IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %s;"
-        cur.execute(alter_schema_privilege, (settings.DB_USER, settings.DB_USER))
+        grant_db: sql.Composed = sql.SQL(
+            "GRANT ALL PRIVILEGES ON DATABASE {0} to {1};",
+        ).format(
+            sql.Identifier(db_name),
+            sql.Identifier(settings.DB_USER),
+        )
+        cur.execute(grant_db.as_string(con))
+        grant_schema: sql.Composed = sql.SQL(
+            "GRANT ALL ON SCHEMA public TO {0};",
+        ).format(
+            sql.Identifier(settings.DB_USER),
+        )
+        cur.execute(grant_schema.as_string(con))
+        grant_tables: sql.Composed = sql.SQL(
+            "GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {0};",
+        ).format(
+            sql.Identifier(settings.DB_USER),
+        )
+        cur.execute(grant_tables.as_string(con))
+        alter_schema_privilege: sql.Composed = sql.SQL(
+            "ALTER DEFAULT PRIVILEGES FOR USER {0} IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO {1};",
+        ).format(
+            sql.Identifier(settings.DB_USER),
+            sql.Identifier(settings.DB_USER),
+        )
+        cur.execute(alter_schema_privilege.as_string(con))
         con.commit()
         print(f"Granted privileges on database {db_name} to user.")
     else:
@@ -63,7 +83,13 @@ def db_creation(con) -> tuple[str, bool]:
     cur.execute(query, (settings.DB_NAME,))
     db_exists: Any = cur.fetchone()
     if not db_exists:
-        cur.execute(f"CREATE DATABASE {settings.DB_NAME};")
+        cur.execute(
+            sql.SQL("CREATE DATABASE {0};")
+            .format(
+                sql.Identifier(settings.DB_NAME),
+            )
+            .as_string(con),
+        )
         print("Database created.")
     else:
         print("Database already exists.")
@@ -72,31 +98,29 @@ def db_creation(con) -> tuple[str, bool]:
 
 
 def run_migrations() -> None:
-    try:
-        alembic_init_path: Path = BASE_DIR / "alembic.ini"
-        alembic_cfg = Config(alembic_init_path)
-        alembic_cfg.set_section_option("logger_alembic", "level", "ERROR")
-        alembic_cfg.attributes["configure_logger"] = False
-        command.revision(alembic_cfg, autogenerate=True)
-        conn: migration.Connection = engine.connect()
-        script_: command.ScriptDirectory = script.ScriptDirectory.from_config(
+    alembic_init_path: Path = BASE_DIR / "alembic.ini"
+    alembic_cfg = Config(alembic_init_path)
+
+    # Use a single connection for all checks to ensure consistency
+    with engine.begin() as conn:
+        alembic_cfg.attributes["connection"] = conn
+
+        script_dir: command.ScriptDirectory = script.ScriptDirectory.from_config(
             alembic_cfg,
         )
         context: migration.MigrationContext = migration.MigrationContext.configure(conn)
-        script_head: str | None = script_.get_current_head()
-        context_head: str | None = context.get_current_revision()
-        print("script_head", script_head)
-        print("context_head", context_head)
-        if context.get_current_revision() != script_.get_current_head():
-            print("The database is not up-to-date. Upgrading the database.")
+
+        current_rev: str | None = context.get_current_revision()
+        head_rev: str | None = script_dir.get_current_head()
+
+        print(f"Current DB revision: {current_rev}")
+        print(f"Latest script revision: {head_rev}")
+
+        if current_rev != head_rev:
+            print("Upgrading database to head...")
             command.upgrade(alembic_cfg, "head")
         else:
-            print("The database is up-to-date. No need to run migrations.")
-    except util.exc.CommandError:
-        command.stamp(alembic_cfg, "head")
-        print(f"Migration failed ! revert head to {context_head}")
-    finally:
-        print("Running finally block.")
+            print("Database is already at head.")
 
 
 if __name__ == "__main__":
