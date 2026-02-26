@@ -22,19 +22,19 @@ if settings.BACKEND_CORS_ORIGINS:
     )
 
 
-@app.get("", include_in_schema=False)
+@app.get("/", include_in_schema=False)
 async def homepage(request: Request) -> HTMLResponse:
-    print(request.base_url)
-    html_content = """
+    # print(request.base_url)
+    html_content: str = f"""
     <html>
         <head>
             <link rel="shortcut icon" href="https://fastapi.tiangolo.com/img/favicon.png">
             <title>Miles App</title>
         </head>
         <body>
-            <h1>Miles App</h1>
+            <h1>{settings.PROJECT_NAME}</h1>
             <p>This is the app homepage! Please go on below mentioned link for available APIs.</p>
-            <a href="/api/v1/miles/docs">Swagger Documentation.</a>
+            <a href="{settings.API_V1_STR}/docs">Swagger Documentation.</a>
         </body>
     </html>
     """
