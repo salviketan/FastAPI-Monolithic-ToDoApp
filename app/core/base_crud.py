@@ -39,10 +39,16 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
     def get_by_kwargs(
         self,
         db: Session,
-        kwargs,
         options: list | None = None,
+        **kwargs,
     ) -> list[ModelType] | None:
-        query: Select[tuple[ModelType]] = select(self.model).where(**kwargs)
+        query: Select[tuple[ModelType]] = select(self.model)
+
+        filters: list = [
+            getattr(self.model, key) == value for key, value in kwargs.items()
+        ]
+
+        query = query.where(*filters)
 
         if options:
             query = query.options(*options)
