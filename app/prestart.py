@@ -31,7 +31,7 @@ def db_connection(*, dbname: bool = False) -> psycopg2.connection:
 
 def user_creation(con, db_name: str) -> None:
     cur: Any = con.cursor()
-    query = "SELECT COUNT(*) FROM pg_catalog.pg_roles WHERE rolname = %s"
+    query = "SELECT COUNT(*) FROM pg_catalog.pg_roles WHERE rolname = %s;"
     print("--" * 10, cur.execute(query, (settings.DB_USER,)))
     cur.execute(query, (settings.DB_USER,))
     user_exists: Any = cur.fetchone()[0]
@@ -79,7 +79,7 @@ def user_creation(con, db_name: str) -> None:
 def db_creation(con) -> tuple[str, bool]:
     con.autocommit = True
     cur: Any = con.cursor()
-    query = "SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s"
+    query = "SELECT 1 FROM pg_catalog.pg_database WHERE datname = %s;"
     cur.execute(query, (settings.DB_NAME,))
     db_exists: Any = cur.fetchone()
     if not db_exists:
