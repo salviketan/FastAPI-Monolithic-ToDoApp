@@ -2,7 +2,7 @@ from pathlib import Path
 from typing import Any
 
 import psycopg2
-from alembic import command, script, util
+from alembic import command, script
 from alembic.config import Config
 from alembic.runtime import migration
 from core.config import BASE_DIR, settings
