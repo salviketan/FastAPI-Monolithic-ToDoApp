@@ -63,10 +63,32 @@ def get_task(
     id: int,  # noqa: A002
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
-    task: models.Task | None = crud.task.get(db, id)
+    task: models.Task | None = crud.task.get(db=db, idx=id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Task doesn't exists.",
         )
+    return task
+
+
+@router.patch(
+    "/{id}",
+    response_model=schemas.Task,
+    status_code=status.HTTP_200_OK,
+)
+def update_task(
+    *,
+    id: int,  # noqa: A002
+    task_in: schemas.TaskUpdate,
+    db: Annotated[Session, Depends(deps.get_db)],
+) -> Any:
+    task: models.Task | None = crud.task.get(db=db, idx=id)
+    if not task:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Task doesn't exists.",
+        )
+    task = crud.task.update(db=db, db_obj=task, obj_in=task_in)
+
     return task
