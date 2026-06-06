@@ -17,17 +17,17 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /backend
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
-ARG UID=10001
-RUN adduser \
---disabled-password \
---gecos "" \
---home "/nonexistent" \
---shell "/sbin/nologin" \
---no-create-home \
---uid "${UID}" \
-appuser
+# # Create a non-privileged user that the app will run under.
+# # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+# ARG UID=10001
+# RUN adduser \
+# --disabled-password \
+# --gecos "" \
+# --home "/nonexistent" \
+# --shell "/sbin/nologin" \
+# --no-create-home \
+# --uid "${UID}" \
+# appuser
 
 RUN apk add --no-cache postgresql-dev gcc musl-dev vim
 
@@ -49,11 +49,11 @@ COPY . .
 # Final sync to install the app itself
 RUN uv sync --frozen --no-dev
 
-# Make non-privileged user owner of app directory
-RUN chown -R appuser:appuser ../backend
+# # Make non-privileged user owner of app directory
+# RUN chown -R appuser:appuser ../backend
 
-# Switch to the non-privileged user to run the application.
-USER appuser
+# # Switch to the non-privileged user to run the application.
+# USER appuser
 
 # Set the virtualenv at the front of the PATH
 ENV PATH="/backend/.venv/bin:$PATH"
