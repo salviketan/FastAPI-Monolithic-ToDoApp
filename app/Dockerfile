@@ -38,7 +38,7 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 # Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
 # Leverage a bind mount to requirements.txt to avoid having to copy them into
 # into this layer.
-COPY pyproject.toml uv.lock .python-version .
+COPY pyproject.toml uv.lock .python-version /backend/
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-project --no-dev
@@ -50,7 +50,7 @@ COPY . .
 RUN uv sync --frozen --no-dev
 
 # Make non-privileged user owner of app directory
-RUN chown -R appuser:appuser ../backend
+RUN chown -R appuser:appuser /backend
 
 # Switch to the non-privileged user to run the application.
 USER appuser

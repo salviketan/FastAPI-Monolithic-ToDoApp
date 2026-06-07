@@ -30,7 +30,7 @@ services:
       - POSTGRES_USER_FILE=/run/secrets/db-user
       - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql
     expose:
       - 5432
     ports:
