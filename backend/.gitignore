@@ -1,19 +1,49 @@
-# Python-generated files
+# ==========================================
+# 1. Virtual Environments & Dependencies
+# ==========================================
+.env
+**/.venv/
+**/[Vv]env/
+**/ENV/
+**/env/
+
 # ==========================================
 # 2. Python & Build Artifacts
 # ==========================================
 **/__pycache__/
-.pytest_cache/
-*.py[oc]
+**/*.py[cod]
+**/*$py.class
+**/.pytest_cache/
+**/.tox/
+**/.nox/
+**/.coverage
+**/htmlcov/
 build/
 dist/
 wheels/
-*.egg-info
+*.egg-info/
 
-# Virtual environments
-**/.venv/
-**/.env
-**/alembic/versions/
+# ==========================================
+# 3. Version Control & IDEs
+# ==========================================
+**/.vscode/
+**/.vs/
+**/.idea/
 
-# exception to the rule
-app/files/!.keepit
+# ==========================================
+# 4. Database & Migrations
+# ==========================================
+# Keeps the folder but ignores specific version files if you want 
+# fresh migrations inside the container
+**/alembic/versions/*
+
+# ==========================================
+# 5. Miscellaneous
+# ==========================================
+**/.DS_Store
+Thumbs.db
+
+# ==========================================
+# 6. exception to the rule
+# ==========================================
+!app/files/.keepit
