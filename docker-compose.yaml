@@ -21,14 +21,8 @@ services:
   app_db:
     hostname: app_db
     image: docker.io/library/postgres:18.2-alpine3.22
-    # restart: always
-    user: postgres
-    secrets:
-      - db-user
-      - db-password
-    environment:
-      - POSTGRES_USER_FILE=/run/secrets/db-user
-      - POSTGRES_PASSWORD_FILE=/run/secrets/db-password
+    env_file:
+      - ./backend/.env
     volumes:
       - postgres_data:/var/lib/postgresql
     expose:
@@ -36,7 +30,7 @@ services:
     ports:
       - 8002:5432
     healthcheck:
-      test: [ "CMD", "pg_isready", "-h", "app_db" ]
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -59,7 +53,7 @@ services:
       - UV_PROJECT_ENVIRONMENT=/tmp/venv
       - UV_CACHE_DIR=/tmp/uv-cache
     volumes:
-      - ./backend:/todo_app/backend:z
+      # - ./backend:/todo_app/backend:z
       - migrations:/todo_app/backend/app/alembic/versions
     deploy:
       replicas: 1
@@ -88,9 +82,3 @@ services:
 volumes:
   postgres_data:
   migrations:
-
-secrets:
-  db-user:
-    file: ./db_creds/user.txt
-  db-password:
-    file: ./db_creds/password.txt

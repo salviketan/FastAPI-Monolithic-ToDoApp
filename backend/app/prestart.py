@@ -14,18 +14,18 @@ from app.db.session import engine
 def db_connection(*, dbname: bool = False) -> psycopg2.connection:
     if dbname:
         con = psycopg2.connect(
-            user=settings.ROOT_DB_USER,
+            user=settings.POSTGRES_USER,
             host=settings.DB_HOST,
             port=settings.DB_PORT,
-            password=settings.ROOT_DB_PASSWORD,
+            password=settings.POSTGRES_PASSWORD,
             database=settings.DB_NAME,
         )
         return con
     con: psycopg2.connection = psycopg2.connect(
-        user=settings.ROOT_DB_USER,
+        user=settings.POSTGRES_USER,
         host=settings.DB_HOST,
         port=settings.DB_PORT,
-        password=settings.ROOT_DB_PASSWORD,
+        password=settings.POSTGRES_PASSWORD,
     )
     return con
 

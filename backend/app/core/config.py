@@ -8,7 +8,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BASE_DIR: Path = Path(__file__).resolve().parent.parent
 
-env_path: Path = BASE_DIR / ".env"
+env_path: Path = BASE_DIR.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -24,8 +24,8 @@ class Settings(BaseSettings):
     TAGS_METADATA: list[dict[str, str]] = []
     DB_ENGINE: str = os.getenv("DB_ENGINE", "postgresql")
     DB_ENGINE_LIB: str = os.getenv("DB_ENGINE_LIB", "postgresql+psycopg2")
-    ROOT_DB_USER: str = os.getenv("ROOT_DB_USER", "")
-    ROOT_DB_PASSWORD: str = os.getenv("ROOT_DB_PASSWORD")
+    POSTGRES_USER: str = os.getenv("POSTGRES_USER", "")
+    POSTGRES_PASSWORD: str = os.getenv("POSTGRES_PASSWORD")
     DB_USER: str = os.getenv("DB_USER")
     DB_PASSWORD: str = os.getenv("DB_PASSWORD")
     DB_HOST: str = os.getenv("DB_HOST", "localhost")
