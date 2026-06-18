@@ -19,6 +19,7 @@ class Settings(BaseSettings):
 
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "To Do App"
+    DEBUG: bool = True
     BACKEND_CORS_ORIGINS: list[AnyHttpUrl] = []
     TAGS_METADATA: list[dict[str, str]] = []
     DB_ENGINE: str = os.getenv("DB_ENGINE", "postgresql")

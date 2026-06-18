@@ -1,12 +1,11 @@
 from typing import Annotated, Any
 
-import crud
-import models
-import schemas
-from api import deps
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
+
+from app import crud, models, schemas
+from app.api import deps
 
 router = APIRouter()
 

@@ -3,8 +3,8 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import pytest
-from api.deps import get_db
 
+from app.api.deps import get_db
 from app.main import app
 
 mock_session = MagicMock()

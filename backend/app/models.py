@@ -1,8 +1,9 @@
 from datetime import datetime
 
-from db.base_class import Base
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column
+
+from app.db.base_class import Base
 
 # class User(Base):
 #     id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)

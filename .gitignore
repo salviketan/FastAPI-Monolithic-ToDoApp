@@ -1,2 +1,4 @@
-# Virtual environments
-db_creds/
+# ==========================================
+# 1. Docker & Configuration
+# ==========================================
+**/db_creds

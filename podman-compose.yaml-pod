@@ -49,20 +49,20 @@ services:
 
   app_service:
     build:
-      context: ./app
-      dockerfile: ./Dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     image: ketansalvi/app:toDo_app_v1.0
-    working_dir: /backend
+    working_dir: /todo_app/backend
     command: ["uv", "run", "run.py"]
     ports:
-      - 8001:80
+      - 8001:8000
     environment:
       # 1. Force uv to put the environment in a clean, writable path
       - UV_PROJECT_ENVIRONMENT=/tmp/venv
       - UV_CACHE_DIR=/tmp/uv-cache
     volumes:
-      # - ./app:/backend:z
-      - migrations:/backend/alembic/versions:z
+      - ./backend/app:/backend/app:z
+      - migrations:/todo_app/backend/app/alembic/versions
     deploy:
       replicas: 1
       restart_policy:
