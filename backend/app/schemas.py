@@ -16,7 +16,9 @@ class TaskCreate(TaskBase):
 
 
 # Properties to receive on Task update
-class TaskUpdate(TaskBase):
+class TaskUpdate(BaseModel):
+    name: str | None = Field(default=None, min_length=1, max_length=250)
+    completed: bool | None = Field(default=None)
     active: bool | None = Field(default=None)
 
 
