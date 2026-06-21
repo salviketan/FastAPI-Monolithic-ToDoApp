@@ -12,7 +12,7 @@ from app.prestart import (
     user_creation,
 )
 
-if not settings.DEBUG:
+if not settings.PYTEST:
     try:
         con: connection = db_connection()
         db, db_exists = db_creation(con)
