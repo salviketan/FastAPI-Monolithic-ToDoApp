@@ -18,8 +18,8 @@ def get_tasks(
     db: Annotated[Session, Depends(deps.get_db)],
     skip: int = 0,
     limit: int = 100,
-) -> list[models.Task]:
-    tasks: list[models.Task] = crud.task.get_multi(
+) -> list[models.Tasks]:
+    tasks: list[models.Tasks] = crud.task.get_multi(
         db,
         skip=skip,
         limit=limit,
@@ -39,7 +39,7 @@ def create_task(
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
     task_in_data: dict[str, Any] = jsonable_encoder(task_in)
-    task: list[models.Task] | None = crud.task.get_by_kwargs(
+    task: list[models.Tasks] | None = crud.task.get_by_kwargs(
         db=db,
         kwargs={"name": task_in_data["name"]},
     )
@@ -62,7 +62,7 @@ def get_task(
     id: int,  # noqa: A002
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
-    task: models.Task | None = crud.task.get(db=db, idx=id)
+    task: models.Tasks | None = crud.task.get(db=db, idx=id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -82,7 +82,7 @@ def update_task(
     task_in: schemas.TaskUpdate,
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
-    task: models.Task | None = crud.task.get(db=db, idx=id)
+    task: models.Tasks | None = crud.task.get(db=db, idx=id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -103,7 +103,7 @@ def delete_task(
     id: int,  # noqa: A002
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
-    task: models.Task | None = crud.task.get(db=db, idx=id)
+    task: models.Tasks | None = crud.task.get(db=db, idx=id)
     if not task:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
