@@ -1,3 +1,4 @@
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -102,26 +103,31 @@ def run_migrations() -> None:
     alembic_init_path: Path = BASE_DIR / "alembic.ini"
     alembic_cfg = Config(alembic_init_path)
 
-    # Use a single connection for all checks to ensure consistency
-    with engine.begin() as conn:
-        alembic_cfg.attributes["connection"] = conn
+    # Just for inspection — separate, short-lived connection
+    with engine.connect() as conn:
+        current_rev: str | None = migration.MigrationContext.configure(
+            conn
+        ).get_current_revision()
+    print(f"Current DB revision: {current_rev}")
 
-        script_dir: command.ScriptDirectory = script.ScriptDirectory.from_config(
-            alembic_cfg,
-        )
-        context: migration.MigrationContext = migration.MigrationContext.configure(conn)
+    # # Let alembic generate a new revision if models changed
+    # # (env.py opens/closes its own connection internally for this)
+    # message: str = f"auto_{datetime.now():%Y%m%d_%H%M%S}"
+    # command.revision(alembic_cfg, autogenerate=True, message="auto")
 
-        current_rev: str | None = context.get_current_revision()
-        head_rev: str | None = script_dir.get_current_head()
+    # check head — script_dir needs a fresh read since a new file may exist
+    script_dir: command.ScriptDirectory = script.ScriptDirectory.from_config(
+        alembic_cfg,
+    )
+    head_rev: str | None = script_dir.get_current_head()
 
-        print(f"Current DB revision: {current_rev}")
-        print(f"Latest script revision: {head_rev}")
+    print(f"Latest script revision: {head_rev}")
 
-        if current_rev != head_rev:
-            print("Upgrading database to head...")
-            command.upgrade(alembic_cfg, "head")
-        else:
-            print("Database is already at head.")
+    if current_rev != head_rev:
+        print("Upgrading database to head...")
+        command.upgrade(alembic_cfg, "head")
+    else:
+        print("Database is already at head.")
 
 
 if __name__ == "__main__":
