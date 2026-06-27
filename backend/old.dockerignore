@@ -30,7 +30,8 @@
 **/obj
 **/secrets.dev.yaml
 **/values.dev.yaml
-**/alembic/versions/*.*
+**/local_db/
+*.db
 **/db_creds
 **/nginx
 LICENSE

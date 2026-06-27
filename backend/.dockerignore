@@ -64,11 +64,11 @@ compose*
 **/db_creds
 
 # ==========================================
-# 6. Database & Migrations
+# 6. Database
 # ==========================================
-# Keeps the folder but ignores specific version files if you want 
-# fresh migrations inside the container
-**/alembic/versions/*.*
+# ignore local sqlite db
+**/local_db/
+*.db
 
 # ==========================================
 # 7. Infrastructure & Static Files
