@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -110,10 +110,20 @@ def run_migrations() -> None:
         ).get_current_revision()
     print(f"Current DB revision: {current_rev}")
 
-    # # Let alembic generate a new revision if models changed
-    # # (env.py opens/closes its own connection internally for this)
-    # message: str = f"auto_{datetime.now():%Y%m%d_%H%M%S}"
-    # command.revision(alembic_cfg, autogenerate=True, message="auto")
+    # DO NOT UNCOMMENT in multi-worker/replica environments.
+    # Race condition: multiple workers autogenerating simultaneously → multiple alembic heads.
+    #
+    # Local dev workflow:
+    #   cd backend
+    #   alembic -c app/alembic.ini revision --autogenerate -m "describe change"
+    #
+    #   Then: git add alembic/versions/ && git commit
+    #   Docker picks it up via bind mount automatically.
+    #   Committing the version file ensures all environments (staging, prod)
+    #   get the same migration — never regenerated, just applied.
+    #
+    # message: str = f"auto_{datetime.now(timezone.utc):%Y%m%d_%H%M%S}"
+    # command.revision(alembic_cfg, autogenerate=True, message=message)
 
     # check head — script_dir needs a fresh read since a new file may exist
     script_dir: command.ScriptDirectory = script.ScriptDirectory.from_config(
