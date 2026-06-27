@@ -1,3 +1,9 @@
+import sys
+from pathlib import Path
+
+# parents[2] = backend/  — added so "app" is importable regardless of cwd
+sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
+
 from logging.config import fileConfig
 from typing import Any
 
@@ -11,10 +17,18 @@ from sqlalchemy.engine.base import Engine
 # access to the values within the .ini file in use.
 config: context.Config = context.config
 
-config.set_main_option(
-    "sqlalchemy.url",
-    str(settings.SQLALCHEMY_DATABASE_URI),
-)
+# For Production
+if settings.ENVIRONMENT == "production":
+    config.set_main_option(
+        "sqlalchemy.url",
+        str(settings.SQLALCHEMY_DATABASE_URI),
+    )
+# For Local
+else:
+    config.set_main_option(
+        "sqlalchemy.url",
+        str(settings.SQLALCHEMY_DB_URL),
+    )
 
 
 # Interpret the config file for Python logging.
@@ -66,6 +80,7 @@ def run_migrations_offline() -> None:
         include_schemas=True,
         include_object=include_object,
         compare_type=True,
+        render_as_batch=True,
     )
 
     with context.begin_transaction():
@@ -99,6 +114,7 @@ def run_migrations_online() -> None:
             include_object=include_object,
             process_revision_directives=process_revision_directives,
             compare_type=True,
+            render_as_batch=True,
         )
 
         with context.begin_transaction():

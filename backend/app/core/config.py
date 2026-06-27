@@ -6,7 +6,7 @@ from pydantic import AnyHttpUrl, PostgresDsn, ValidationInfo, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-BASE_DIR: Path = Path(__file__).resolve().parent.parent
+BASE_DIR: Path = Path(__file__).resolve().parents[1]
 
 env_path: Path = BASE_DIR.parent / ".env"
 
@@ -33,11 +33,11 @@ class Settings(BaseSettings):
     DB_NAME: str = os.getenv("DB_NAME")
     SQLALCHEMY_DB_URL: str = os.getenv(
         "SQLALCHEMY_DB_URL",
-        "{engine}://{user}:{passwd}@{host}:{port}/{db}",
+        "sqlite:///local_db/local_migration.db",
     )
     SQLALCHEMY_DATABASE_URI: PostgresDsn | None = None
     PYTEST: bool = os.getenv("PYTEST", "False") == "True"
-    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "production")
+    ENVIRONMENT: str = os.getenv("ENVIRONMENT", "local")
 
     @field_validator("SQLALCHEMY_DATABASE_URI", mode="before")
     @classmethod

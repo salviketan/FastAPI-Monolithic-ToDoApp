@@ -12,7 +12,7 @@ from app.prestart import (
     user_creation,
 )
 
-if not settings.PYTEST:
+if settings.ENVIRONMENT == "production":
     try:
         con: connection = db_connection()
         db, db_exists = db_creation(con)
