@@ -106,7 +106,7 @@ def run_migrations() -> None:
     # Just for inspection — separate, short-lived connection
     with engine.connect() as conn:
         current_rev: str | None = migration.MigrationContext.configure(
-            conn
+            conn,
         ).get_current_revision()
     print(f"Current DB revision: {current_rev}")
 
