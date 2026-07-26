@@ -39,6 +39,14 @@ def create_task(
     db: Annotated[Session, Depends(deps.get_db)],
 ) -> Any:
     task_in_data: dict[str, Any] = jsonable_encoder(task_in)
+
+    user: models.Users | None = crud.user.get(db=db, idx=task_in_data["owner_id"])
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User doesn't exists.",
+        )
+
     task: list[models.Tasks] | None = crud.task.get_by_kwargs(
         db=db,
         kwargs={"name": task_in_data["name"]},

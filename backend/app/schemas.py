@@ -43,6 +43,7 @@ class UserInDBBase(UserPublicBase):
 class TaskBase(BaseModel):
     name: str = Field(min_length=1, max_length=250)
     completed: bool = Field(default=False)
+    owner_id: int
 
 
 # Properties to receive on Task creation
@@ -62,7 +63,7 @@ class TaskInDBBase(TaskBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
-    owner_id: int
+    # owner_id: int
     owner: UserInDBBase
 
 
