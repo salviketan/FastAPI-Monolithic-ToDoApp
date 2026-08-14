@@ -52,8 +52,8 @@ services:
       # 1. Force uv to put the environment in a clean, writable path
       - UV_PROJECT_ENVIRONMENT=/tmp/venv
       - UV_CACHE_DIR=/tmp/uv-cache
-    volumes:
-      # - ./backend:/todo_app/backend:z
+    # volumes:
+    #   - ./backend:/todo_app/backend:z
     deploy:
       replicas: 1
       restart_policy:
