@@ -1,2 +1,2 @@
 from app.db.base_class import Base
-from app.models import Tasks
+from app.models import Task  # noqa: F401

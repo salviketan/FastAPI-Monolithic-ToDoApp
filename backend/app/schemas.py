@@ -3,6 +3,63 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, EmailStr, Field
 
 
+# ==========================================
+# Reusable Schema Mixins
+# ==========================================
+class UserAuditSchemaMixin(BaseModel):
+    """Mixin for models requiring created_by_id and updated_by_id on creation."""
+
+    created_by_id: int = Field(
+        gt=0, description="ID of the authenticated user creating this record"
+    )
+    updated_by_id: int = Field(
+        gt=0, description="ID of the authenticated user performing this operation"
+    )
+
+
+class UserAuditUpdateSchemaMixin(BaseModel):
+    """Mixin for models requiring optional updated_by_id on update payloads."""
+
+    updated_by_id: int | None = Field(
+        default=None,
+        gt=0,
+        description="ID of the authenticated user updating this record",
+    )
+
+
+class ActiveFieldUpdateSchemaMixin(BaseModel):
+    """Mixin for models requiring optional active on update payloads."""
+
+    active: bool | None = Field(
+        default=None, description="Optional active status toggle"
+    )
+
+
+class TimestampSchemaMixin(BaseModel):
+    """Mixin for models returning timestamp & active status fields to the client."""
+
+    active: bool = Field(
+        default=True,
+        description="Soft-delete status flag (True for active, False for disabled)",
+    )
+    created_at: datetime = Field(
+        description="Timestamp (UTC) when this record was originally created"
+    )
+    updated_at: datetime = Field(
+        description="Timestamp (UTC) when this record was last modified"
+    )
+
+
+class IDSchemaMixin(BaseModel):
+    """Mixin providing database primary key ID & ORM attributes support."""
+
+    model_config = ConfigDict(from_attributes=True)
+    id: int
+
+
+# ---------------------------------------------
+
+
 ##### Task Table Schema #####
 # Shared properties
 class UserPublicBase(BaseModel):
@@ -23,16 +80,13 @@ class UserCreate(UserPrivateBase):
 
 
 # Properties to receive on User update
-class UserUpdate(UserPublicBase):
+class UserUpdate(ActiveFieldUpdateSchemaMixin):
     email: EmailStr | None = Field(default=None, max_length=128)
-    active: bool | None = Field(default=None)
 
 
 # Properties shared by models stored in DB
-class UserInDBBase(UserPublicBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
+class UserInDBBase(UserPublicBase, IDSchemaMixin):
+    pass
 
 
 #############################
@@ -52,18 +106,14 @@ class TaskCreate(TaskBase):
 
 
 # Properties to receive on Task update
-class TaskUpdate(BaseModel):
+class TaskUpdate(ActiveFieldUpdateSchemaMixin):
     name: str | None = Field(default=None, min_length=1, max_length=250)
     completed: bool | None = Field(default=None)
-    active: bool | None = Field(default=None)
 
 
 # Properties shared by models stored in DB
-class TaskInDBBase(TaskBase):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: int
-    # owner_id: int
+class TaskInDBBase(TaskBase, IDSchemaMixin):
+    owner_id: int
     owner: UserInDBBase
 
 
@@ -73,28 +123,26 @@ class TaskInDBBase(TaskBase):
 # ---------------------------------------------
 
 
+# ==========================================
 # Properties to return to client
-class User(UserInDBBase):
-    active: bool
-    created_at: datetime
-    updated_at: datetime
+# ==========================================
+class User(UserInDBBase, TimestampSchemaMixin):
+    pass
 
 
-# Properties to return to client
-class Task(TaskInDBBase):
-    active: bool
-    created_at: datetime
-    updated_at: datetime
+class Task(TaskInDBBase, TimestampSchemaMixin):
+    pass
 
 
 # ---------------------------------------------
 
 
+# ==========================================
 # Properties stored in DB
-class UserInDB(UserInDBBase):
+# ==========================================
+class UserInDB(UserInDBBase, TimestampSchemaMixin):
     pass
 
 
-# Properties stored in DB
-class TaskInDB(TaskInDBBase):
+class TaskInDB(TaskInDBBase, TimestampSchemaMixin):
     pass

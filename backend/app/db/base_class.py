@@ -1,15 +1,17 @@
+import re
 from typing import Any
 
-from sqlalchemy.ext.declarative import declared_attr
-from sqlalchemy.orm import as_declarative
+from sqlalchemy.orm import DeclarativeBase, declared_attr
 
 
-@as_declarative()
-class Base:
+class Base(DeclarativeBase):
     id: Any
-    __name__: str
 
-    # Generate __tablename__ automatically
-    @declared_attr
-    def __tablename__(self) -> str:
-        return self.__name__.lower()
+    # Generate __tablename__ automatically in snake_case + pluralized
+    @declared_attr.directive
+    def __tablename__(cls) -> str:
+        # Inserts an underscore before any capital letter preceded by a lowercase letter
+        snake_name: str = re.sub(r"(?<!^)(?=[A-Z])", "_", cls.__name__).lower()
+
+        # Simple pluralization (adds 's')
+        return f"{snake_name}s"
