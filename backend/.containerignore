@@ -62,6 +62,7 @@ compose*
 **/values.dev.yaml
 **.env_ref
 **/db_creds
+**/db_setup
 
 # ==========================================
 # 6. Database
