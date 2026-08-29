@@ -1,21 +1,16 @@
-from collections.abc import Generator
+from collections.abc import AsyncGenerator
+from typing import Any
+
+from sqlalchemy.ext.asyncio.session import AsyncSession
 
 # from fastapi import Depends, HTTPException, status
 # from fastapi.security import OAuth2PasswordBearer
 # from jose import jwt
 # from pydantic import ValidationError
-from sqlalchemy.orm import Session
-
 # from app import crud, models, schemas
-from app.db.session import SessionLocal
+from app.db.session import AsyncSessionLocal
 
 
-def get_db() -> Generator:
-    try:
-        db: Session = SessionLocal()
-        yield db
-    finally:
-        db.close()
-
-
-db_session: Session = next(get_db())
+async def get_db() -> AsyncGenerator[AsyncSession, Any, None]:
+    async with AsyncSessionLocal() as session:
+        yield session

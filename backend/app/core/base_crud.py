@@ -3,9 +3,11 @@ from typing import Any, Generic, TypeVar
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
 from sqlalchemy import select
-from sqlalchemy.orm import Session
+from sqlalchemy.engine.result import Result
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.sql.selectable import Select
 
+from app.core.logger import debug_logger
 from app.db.base_class import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -24,9 +26,9 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model: type[ModelType] = model
 
-    def get(
+    async def get(
         self,
-        db: Session,
+        db: AsyncSession,
         idx: Any,
         options: list | None = None,
     ) -> ModelType | None:
@@ -35,11 +37,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if options:
             query = query.options(*options)
 
-        return db.execute(query).scalar_one_or_none()
+        result: Result[tuple[ModelType]] = await db.execute(query)
+        return result.scalar_one_or_none()
 
-    def get_by_kwargs(
+    async def get_by_kwargs(
         self,
-        db: Session,
+        db: AsyncSession,
         kwargs: dict[str, Any],
         options: list | None = None,
     ) -> list[ModelType] | None:
@@ -48,11 +51,12 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if options:
             query = query.options(*options)
 
-        return db.execute(query).scalars().first()
+        result: Result[tuple[ModelType]] = await db.execute(query)
+        return result.scalars().first()
 
-    def get_multi(
+    async def get_multi(
         self,
-        db: Session,
+        db: AsyncSession,
         *,
         skip: int = 0,
         limit: int = 100,
@@ -65,54 +69,91 @@ class CRUDBase(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         if options:
             query = query.options(*options)
 
-        return db.execute(query).scalars().all()
+        result: Result[tuple[ModelType]] = await db.execute(query)
+        return result.scalars().all()
 
-    def create_from_dict(
+    async def create_from_dict(
         self,
-        db: Session,
+        db: AsyncSession,
         *,
         obj_in_data: dict[str, Any],
     ) -> ModelType:
+
+        debug_logger.debug("Creating %s", self.model.__name__)
+
         db_obj: ModelType = self.model(**obj_in_data)
         db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
+        await db.commit()
+        await db.refresh(db_obj)
+
+        debug_logger.debug(
+            "Successfully created %s [id=%s]",
+            self.model.__name__,
+            getattr(db_obj, "id", None),
+        )
+
         return db_obj
 
-    def create(self, db: Session, *, obj_in: CreateSchemaType) -> ModelType:
+    async def create(self, db: AsyncSession, *, obj_in: CreateSchemaType) -> ModelType:
         obj_in_data: dict[str, Any] = jsonable_encoder(obj_in)
-        db_obj: ModelType = self.create_from_dict(db, obj_in_data=obj_in_data)
+        db_obj: ModelType = await self.create_from_dict(db, obj_in_data=obj_in_data)
         return db_obj
 
-    def update(
+    async def update(
         self,
-        db: Session,
+        db: AsyncSession,
         *,
         db_obj: ModelType,
         obj_in: UpdateSchemaType | dict[str, Any],
         refresh_attributes: list[str] | None = None,
     ) -> ModelType:
-        obj_data: dict[str, Any] = jsonable_encoder(db_obj)
+        obj_id: Any | None = getattr(db_obj, "id", None)
         if isinstance(obj_in, dict):
             update_data: dict[str, Any] = obj_in
         else:
             update_data: dict[str, Any] = obj_in.model_dump(exclude_unset=True)
+
+        debug_logger.debug("Updating %s [id=%s]", self.model.__name__, obj_id)
+
+        obj_data: dict[str, Any] = jsonable_encoder(db_obj)
         for field in obj_data:
             if field in update_data:
                 setattr(db_obj, field, update_data[field])
+
         db.add(db_obj)
-        db.commit()
+        await db.commit()
 
         if refresh_attributes:
-            db.refresh(db_obj, attribute_names=refresh_attributes)
+            await db.refresh(db_obj, attribute_names=refresh_attributes)
         else:
-            db.refresh(db_obj)
+            await db.refresh(db_obj)
+
+        debug_logger.debug(
+            "Successfully updated %s [id=%s]",
+            self.model.__name__,
+            obj_id,
+        )
+
         return db_obj
 
-    def remove(self, db: Session, *, idx: int) -> ModelType:
+    async def remove(self, db: AsyncSession, *, idx: int) -> ModelType:
+        debug_logger.debug("Attempting to delete %s [id=%s]", self.model.__name__, idx)
+
         query: Select[tuple[ModelType]] = select(self.model).where(self.model.id == idx)
-        obj: ModelType | None = db.execute(query).scalar_one_or_none()
+        result: Result[tuple[ModelType]] = await db.execute(query)
+        obj: ModelType | None = result.scalar_one_or_none()
         if obj:
-            db.delete(obj)
-            db.commit()
+            await db.delete(obj)
+            await db.commit()
+            debug_logger.debug(
+                "Successfully deleted %s [id=%s]",
+                self.model.__name__,
+                idx,
+            )
+        else:
+            debug_logger.debug(
+                "Delete failed: %s [id=%s] not found",
+                self.model.__name__,
+                idx,
+            )
         return obj

@@ -1,26 +1,21 @@
-from pathlib import Path
-
-from sqlalchemy import create_engine
-from sqlalchemy.engine.base import Engine
-from sqlalchemy.orm import sessionmaker
-from sqlalchemy.orm.session import Session
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app.core.config import settings
 
-if settings.ENVIRONMENT == "production":
-    engine: Engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URI))
-else:
-    # 1. Define the directory and ensure it exists
-    DB_DIR = Path("local_db")
-    DB_DIR.mkdir(parents=True, exist_ok=True)
+engine: AsyncEngine = create_async_engine(
+    settings.SQLALCHEMY_DB_URL,
+    pool_recycle=900,
+    pool_pre_ping=True,
+)
 
-    engine: Engine = create_engine(
-        settings.SQLALCHEMY_DB_URL,
-        connect_args={"check_same_thread": False},
-    )
-
-SessionLocal: sessionmaker[Session] = sessionmaker(
+AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
+    bind=engine,
     autocommit=False,
     autoflush=False,
-    bind=engine,
+    expire_on_commit=False,
 )
