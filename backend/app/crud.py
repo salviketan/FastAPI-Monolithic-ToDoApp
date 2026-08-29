@@ -1,15 +1,15 @@
 from app.core.base_crud import CRUDBase
-from app.models import Tasks, Users
+from app.models import Task, User
 from app.schemas import TaskCreate, TaskUpdate, UserCreate, UserUpdate
 
 
-class CRUDUser(CRUDBase[Users, UserCreate, UserUpdate]):
+class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     pass
 
 
-class CRUDTask(CRUDBase[Tasks, TaskCreate, TaskUpdate]):
+class CRUDTask(CRUDBase[Task, TaskCreate, TaskUpdate]):
     pass
 
 
-user = CRUDUser(Users)
-task = CRUDTask(Tasks)
+user = CRUDUser(User)
+task = CRUDTask(Task)
