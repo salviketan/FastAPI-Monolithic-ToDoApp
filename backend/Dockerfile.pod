@@ -5,55 +5,80 @@
 # https://docs.docker.com/engine/reference/builder/
 
 ARG PYTHON_VERSION=3.14
-FROM python:${PYTHON_VERSION}-alpine3.23 AS base
+# We declare the working directory as a variable to keep paths consistent
+ARG APP_DIR=/todo_app/backend
 
-# Prevents Python from writing pyc files.
+# ==============================================================================
+# Stage 1: Build & Dependency Installation
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim-bookworm AS builder
+ARG APP_DIR
+
+# Install uv instantly using the official installer image
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
+
+WORKDIR ${APP_DIR}
 ENV PYTHONDONTWRITEBYTECODE=1
-
-# Keeps Python from buffering stdout and stderr to avoid situations where
-# the application crashes without emitting any logs due to buffering.
 ENV PYTHONUNBUFFERED=1
 
+# Install system dependencies needed for compiling packages (postgresql-dev, gcc)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /todo_app/backend
+# Copy your native uv configuration files
+COPY pyproject.toml uv.lock .python-version ${APP_DIR}/
 
-# # Create a non-privileged user that the app will run under.
-# # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
-# ARG UID=10001
-# RUN adduser \
-# --disabled-password \
-# --gecos "" \
-# --home "/nonexistent" \
-# --shell "/sbin/nologin" \
-# --no-create-home \
-# --uid "${UID}" \
-# appuser
+# Install production dependencies only into a virtual environment (.venv)
+RUN uv sync --no-dev --frozen
 
-RUN apk add --no-cache postgresql-dev gcc musl-dev vim
+# ==============================================================================
+# Stage 2: Final Production Runtime Image
+# ==============================================================================
+FROM python:${PYTHON_VERSION}-slim-bookworm AS runner
+ARG APP_DIR
+ARG UID=10001
 
-# Skip curl/sh and just copy the binary directly
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
-    
-# Download dependencies as a separate step to take advantage of Docker's caching.
-# Leverage a cache mount to /root/.cache/pip to speed up subsequent builds.
-# Leverage a bind mount to requirements.txt to avoid having to copy them into
-# into this layer.
-COPY pyproject.toml uv.lock .python-version /todo_app/backend/
+WORKDIR ${APP_DIR}
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
 
-RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-install-project --no-dev
+# Automatically inject the virtual environment into the system PATH
+ENV PATH="${APP_DIR}/.venv/bin:$PATH"
 
-# Copy the source code into the container.
-COPY . .
+# Install only the runtime dependency for postgresql (not the dev headers)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libpq5 \
+    && rm -rf /var/lib/apt/lists/*
 
-# Final sync to install the app itself
-RUN uv sync --frozen --no-dev
+# Create a non-privileged user that the app will run under.
+# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+RUN adduser \
+    --disabled-password \
+    --gecos "" \
+    --home "/nonexistent" \
+    --shell "/sbin/nologin" \
+    --no-create-home \
+    --uid "${UID}" \
+    appuser
 
-# # Make non-privileged user owner of app directory
-# RUN chown -R appuser:appuser ../backend
+# CRITICAL STEP: Copy ONLY the pre-compiled .venv from the builder stage
+COPY --from=builder ${APP_DIR}/.venv ${APP_DIR}/.venv
 
-# # Switch to the non-privileged user to run the application.
-# USER appuser
+# Copy your application code (Ensure you have a .dockerignore to skip local .venv)
+COPY . ${APP_DIR}
 
-# Set the virtualenv at the front of the PATH
-ENV PATH="/backend/.venv/bin:$PATH"
+# Make non-privileged user owner of app directory
+RUN chown -R appuser:appuser /todo_app
+
+# Switch to the non-privileged user to run the application.
+USER appuser
+
+# Expose the port FastAPI runs on
+EXPOSE 8000
+
+# Run the application using entrypoint.sh
+RUN chmod +x entrypoint.sh
+
+CMD ["./entrypoint.sh"]
