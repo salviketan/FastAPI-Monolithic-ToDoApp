@@ -52,16 +52,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     && rm -rf /var/lib/apt/lists/*
 
-# Create a non-privileged user that the app will run under.
-# See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
-RUN adduser \
-    --disabled-password \
-    --gecos "" \
-    --home "/nonexistent" \
-    --shell "/sbin/nologin" \
-    --no-create-home \
-    --uid "${UID}" \
-    appuser
+# # Create a non-privileged user that the app will run under.
+# # See https://docs.docker.com/develop/develop-images/dockerfile_best-practices/#user
+# RUN adduser \
+#     --disabled-password \
+#     --gecos "" \
+#     --home "/nonexistent" \
+#     --shell "/sbin/nologin" \
+#     --no-create-home \
+#     --uid "${UID}" \
+#     appuser
 
 # CRITICAL STEP: Copy ONLY the pre-compiled .venv from the builder stage
 COPY --from=builder ${APP_DIR}/.venv ${APP_DIR}/.venv
@@ -69,11 +69,11 @@ COPY --from=builder ${APP_DIR}/.venv ${APP_DIR}/.venv
 # Copy your application code (Ensure you have a .dockerignore to skip local .venv)
 COPY . ${APP_DIR}
 
-# Make non-privileged user owner of app directory
-RUN chown -R appuser:appuser /todo_app
+# # Make non-privileged user owner of app directory
+# RUN chown -R appuser:appuser /todo_app
 
-# Switch to the non-privileged user to run the application.
-USER appuser
+# # Switch to the non-privileged user to run the application.
+# USER appuser
 
 # Expose the port FastAPI runs on
 EXPOSE 8000
