@@ -76,7 +76,7 @@ class UserPrivateBase(BaseModel):
 
 # Properties to receive on User creation
 class UserCreate(UserPrivateBase):
-    password: str = Field(min_length=8)
+    password: str = Field(min_length=8, examples=["P@55word"])
 
 
 # Properties to receive on User update
