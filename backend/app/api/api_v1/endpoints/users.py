@@ -2,7 +2,7 @@ from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import crud, models, schemas
 from app.api import deps
@@ -14,12 +14,12 @@ router = APIRouter()
     "",
     response_model=list[schemas.User],
 )
-def get_users(
-    db: Annotated[Session, Depends(deps.get_db)],
+async def get_users(
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
     skip: int = 0,
     limit: int = 100,
-) -> list[models.Users]:
-    users: list[models.Users] = crud.user.get_multi(
+) -> list[models.User]:
+    users: list[models.User] = await crud.user.get_multi(
         db,
         skip=skip,
         limit=limit,
@@ -33,13 +33,13 @@ def get_users(
     response_model=schemas.User,
     status_code=status.HTTP_201_CREATED,
 )
-def create_user(
+async def create_user(
     *,
     user_in: schemas.UserCreate,
-    db: Annotated[Session, Depends(deps.get_db)],
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
 ) -> Any:
     user_in_data: dict[str, Any] = jsonable_encoder(user_in)
-    user: list[models.Users] | None = crud.user.get_by_kwargs(
+    user: list[models.User] | None = await crud.user.get_by_kwargs(
         db=db,
         kwargs={"email": user_in_data["email"]},
     )
@@ -48,7 +48,7 @@ def create_user(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="User with email already exists.",
         )
-    user = crud.user.create(db, obj_in=user_in)
+    user = await crud.user.create(db, obj_in=user_in)
     return user
 
 
@@ -57,11 +57,11 @@ def create_user(
     response_model=schemas.User,
     status_code=status.HTTP_200_OK,
 )
-def get_user(
+async def get_user(
     id: int,  # noqa: A002
-    db: Annotated[Session, Depends(deps.get_db)],
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
 ) -> Any:
-    user: models.Users | None = crud.user.get(db, idx=id)
+    user: models.User | None = await crud.user.get(db, idx=id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -76,19 +76,19 @@ def get_user(
     response_model=schemas.User,
     status_code=status.HTTP_200_OK,
 )
-def update_user(
+async def update_user(
     *,
     id: int,  # noqa: A002
     user_in: schemas.UserUpdate,
-    db: Annotated[Session, Depends(deps.get_db)],
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
 ) -> Any:
-    user: models.Users | None = crud.user.get(db=db, idx=id)
+    user: models.User | None = await crud.user.get(db=db, idx=id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User doesn't exists.",
         )
-    user = crud.user.update(db=db, db_obj=user, obj_in=user_in)
+    user = await crud.user.update(db=db, db_obj=user, obj_in=user_in)
 
     return user
 
@@ -98,17 +98,17 @@ def update_user(
     response_model=schemas.User,
     status_code=status.HTTP_200_OK,
 )
-def delete_user(
+async def delete_user(
     *,
     id: int,  # noqa: A002
-    db: Annotated[Session, Depends(deps.get_db)],
+    db: Annotated[AsyncSession, Depends(deps.get_db)],
 ) -> Any:
-    user: models.Users | None = crud.user.get(db=db, idx=id)
+    user: models.User | None = await crud.user.get(db=db, idx=id)
     if not user:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User doesn't exists.",
         )
-    user = crud.user.remove(db=db, idx=id)
+    user = await crud.user.remove(db=db, idx=id)
 
     return user
